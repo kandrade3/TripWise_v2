@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-msg">Loading TripWise…</div>
+</div>
+
+<!-- ── CLAIM MODAL ── -->
+<div id="claim-modal" class="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-item-name">Item name</div>
+    <div class="modal-section" id="modal-qty-section">
+      <label class="modal-label">How many are you bringing?</label>
+      <div class="qty-stepper">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-display" id="modal-qty-val">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+        <span class="qty-max" id="modal-qty-max"></span>
+      </div>
+    </div>
+    <div class="modal-section">
+      <label class="modal-label">Add a note <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+      <textarea id="modal-comment" class="modal-textarea" placeholder="e.g. I have a 60m dry-treated rope…" rows="3"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="confirmClaim()">Confirm</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EDIT ITEM MODAL ── -->
+<div id="edit-modal" class="modal-backdrop" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <div class="modal-title">Edit Item</div>
+    <div class="modal-section">
+      <label class="modal-label">Item Name</label>
+      <input type="text" id="edit-item-name" placeholder="Item name">
+    </div>
+    <div class="modal-section">
+      <label class="modal-label">Total Quantity Needed</label>
+      <div class="qty-stepper">
+        <button class="qty-btn" onclick="changeEditQty(-1)">−</button>
+        <span class="qty-display" id="edit-qty-val">1</span>
+        <button class="qty-btn" onclick="changeEditQty(1)">+</button>
+      </div>
+      <div class="edit-per-person-row">
+        <label class="edit-pp-label" onclick="toggleEditPerPerson()">
+          <span class="edit-pp-checkbox" id="edit-pp-checkbox"></span>
+          Scale with crew size (per person)
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="confirmEdit()">Save Changes</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RENAME MEMBER MODAL ── -->
+<div id="rename-modal" class="modal-backdrop" onclick="closeRenameModal(event)">
+  <div class="modal-box">
+    <div class="modal-title">Edit Your Display Name</div>
+    <div class="modal-section">
+      <label class="modal-label">New Display Name</label>
+      <input type="text" id="rename-input" placeholder="Enter your name" onkeydown="if(event.key==='Enter') confirmRename()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="confirmRename()">Save</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeRenameModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE TRIP MODAL ── -->
+<div id="delete-trip-modal" class="modal-backdrop" onclick="closeDeleteTripModal(event)">
+  <div class="modal-box">
+    <div class="modal-title" style="color:var(--rust)">🗑️ Delete Trip?</div>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">This will permanently delete the trip and all gear lists for everyone. This cannot be undone.</p>
+    <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">Type the Trip ID to confirm:</p>
+    <input type="text" id="delete-trip-confirm-input" placeholder="Enter Trip ID" style="text-transform:uppercase;letter-spacing:2px;font-family:'Syne',sans-serif;font-weight:700;">
+    <div class="err" id="err-delete-confirm">Trip ID does not match.</div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn btn-delete-trip btn-sm" onclick="confirmDeleteTrip()">Delete Forever</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeDeleteTripModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-inner">
+    <div class="logo-icon">⛺</div>
+    <div class="logo-text">
+      <h1>TripWise</h1>
+      <p>Communal trip planner</p>
+    </div>
+    <div class="header-user" id="header-user"></div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════ -->
+<div id="screen-auth" class="screen active">
+  <div class="wrap wrap-narrow">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+    <div class="form-card">
+
+      <!-- Sign In -->
+      <div id="auth-login">
+        <div class="field">
+          <label>Email</label>
+          <input type="text" id="login-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter') signIn()">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Your password" onkeydown="if(event.key==='Enter') signIn()">
+        </div>
+        <div class="err" id="err-login"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="signIn()">Sign In</button>
+        </div>
+        <div class="auth-switch">Forgot your password? <a href="#" onclick="sendReset()">Reset it</a></div>
+      </div>
+
+      <!-- Sign Up -->
+      <div id="auth-signup" style="display:none">
+        <div class="field">
+          <label>Display Name</label>
+          <input type="text" id="signup-name" placeholder="e.g. Alex" onkeydown="if(event.key==='Enter') signUp()">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="text" id="signup-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter') signUp()">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="At least 6 characters" onkeydown="if(event.key==='Enter') signUp()">
+        </div>
+        <div class="err" id="err-signup"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="signUp()">Create Account</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HOME SCREEN
+══════════════════════════════════════ -->
+<div id="screen-home" class="screen">
+  <div class="wrap">
+    <div class="home-grid">
+      <div class="home-card" onclick="showScreen('create')">
+        <span class="card-emoji">🗺️</span>
+        <h2>Create a Trip</h2>
+        <p>Start planning a new adventure. Set the type, camping preference, and auto-generate a gear list.</p>
+      </div>
+      <div class="home-card" onclick="showScreen('join')">
+        <span class="card-emoji">🤝</span>
+        <h2>Join a Trip</h2>
+        <p>Enter the Trip ID shared by your crew to join and claim the gear you're bringing.</p>
+      </div>
+    </div>
+    <div class="trips-preview">
+      <div class="section-label"><span class="sync-dot"></span>My Trips</div>
+      <div id="home-trips-list"><div class="empty-state">Loading your trips…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CREATE SCREEN
+══════════════════════════════════════ -->
+<div id="screen-create" class="screen">
+  <div class="wrap">
+    <div class="screen-title">Create a Trip</div>
+    <div class="screen-sub">Fill in the details — we'll generate a starter gear list scaled to your crew size.</div>
+    <div class="form-card">
+      <div class="field">
+        <label>Trip Name</label>
+        <input type="text" id="create-trip-name" placeholder="e.g. Red Rocks April Adventure">
+        <div class="err" id="err-trip-name"></div>
+      </div>
+      <div class="field">
+        <label>Trip Type</label>
+        <select id="create-trip-type">
+          <option value="">— Select a trip type —</option>
+          <option value="lead_climbing">🧗 Lead Climbing</option>
+          <option value="top_rope_climbing">🧗 Top Rope Climbing</option>
+          <option value="bouldering">🪨 Bouldering</option>
+          <option value="hiking">🥾 Hiking</option>
+          <option value="backpacking">🎒 Backpacking</option>
+          <option value="scuba_diving">🤿 Scuba Diving</option>
+          <option value="kayaking">🛶 Kayaking</option>
+          <option value="mountain_biking">🚵 Mountain Biking</option>
+          <option value="skiing">⛷️ Skiing / Snowboarding</option>
+          <option value="canyoneering">🏜️ Canyoneering</option>
+        </select>
+        <div class="err" id="err-trip-type"></div>
+      </div>
+      <div class="field">
+        <label>Expected Group Size</label>
+        <div class="group-size-row">
+          <button class="qty-btn" onclick="changeGroupSize(-1)">−</button>
+          <span class="qty-display" id="group-size-val">1</span>
+          <button class="qty-btn" onclick="changeGroupSize(1)">+</button>
+          <span class="group-size-hint">person(s) — per-person gear will be multiplied</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Camping Overnight?</label>
+        <label class="camping-toggle" id="camping-toggle" onclick="toggleCamping(event)">
+          <input type="checkbox" id="camping-check">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          <div>
+            <div class="toggle-label" id="camping-label">No — Day Trip</div>
+            <div class="toggle-sub">Toggle to add camping gear</div>
+          </div>
+        </label>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="createTrip()">Generate Trip &amp; Gear List</button>
+        <button class="btn btn-ghost" onclick="showScreen('home')">← Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     JOIN SCREEN
+══════════════════════════════════════ -->
+<div id="screen-join" class="screen">
+  <div class="wrap">
+    <div class="screen-title">Join a Trip</div>
+    <div class="screen-sub">Enter the Trip ID shared by the trip creator.</div>
+    <div class="form-card">
+      <div class="field">
+        <label>Trip ID</label>
+        <input type="text" id="join-trip-id" placeholder="e.g. B7KQ" style="text-transform:uppercase;letter-spacing:2px;font-family:'Syne',sans-serif;font-weight:700;">
+        <div class="err" id="err-join-trip"></div>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="joinTrip()">Join Trip</button>
+        <button class="btn btn-ghost" onclick="showScreen('home')">← Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TRIP VIEW SCREEN
+══════════════════════════════════════ -->
+<div id="screen-trip" class="screen">
+  <div class="wrap">
+    <div id="trip-header-block"></div>
+    <div id="trip-status-strip"></div>
+    <div id="trip-progress-wrap"></div>
+    <div class="supplies-grid">
+      <div class="supply-panel">
+        <div class="panel-head">
+          <div class="panel-head-left">
+            <div class="panel-title">🎒 Gear Needed</div>
+            <span class="count-badge muted" id="needed-count">0</span>
+          </div>
+        </div>
+        <div class="supply-list" id="needed-list"></div>
+        <div class="add-item-row">
+          <input type="text" id="new-item-input" placeholder="Add custom item…" onkeydown="if(event.key==='Enter') addItem()">
+          <div class="add-qty-wrap">
+            <span class="add-qty-label">Qty</span>
+            <select id="new-item-qty" class="add-qty-select">
+              <option value="1">1×</option>
+              <option value="2">2×</option>
+              <option value="3">3×</option>
+              <option value="4">4×</option>
+              <option value="5">5×</option>
+              <option value="0">Per person</option>
+            </select>
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="addItem()">Add</button>
+        </div>
+      </div>
+      <div class="supply-panel">
+        <div class="panel-head">
+          <div class="panel-head-left">
+            <div class="panel-title">✅ Gear Covered</div>
+            <span class="count-badge" id="covered-count">0</span>
+          </div>
+        </div>
+        <div class="supply-list" id="covered-list"></div>
+      </div>
+    </div>
+    <div class="trip-footer-actions">
+      <div class="trip-id-box">
+        <span class="trip-id-label">Trip ID</span>
+        <span class="trip-id-value" id="footer-trip-id">—</span>
+        <button class="btn btn-secondary btn-sm" onclick="copyTripId()">📋 Copy ID</button>
+      </div>
+      <div id="leave-trip-btn-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✓ Done</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
