@@ -152,6 +152,10 @@
           <label>Password</label>
           <input type="password" id="signup-password" placeholder="At least 6 characters" onkeydown="if(event.key==='Enter') signUp()">
         </div>
+        <div class="field">
+          <label>Confirm Password</label>
+          <input type="password" id="signup-confirm-password" placeholder="Re-enter your password" onkeydown="if(event.key==='Enter') signUp()">
+        </div>
         <div class="err" id="err-signup"></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="signUp()">Create Account</button>
