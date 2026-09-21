@@ -1,13 +1,12 @@
 // ── Firebase config ──────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey:            "AIzaSyD69L677x8OWg7lkRkv_-QZUSvxHQDPL8U",
-  authDomain:        "tripwise-4a4ba.firebaseapp.com",
-  databaseURL:       "https://tripwise-4a4ba-default-rtdb.firebaseio.com",
-  projectId:         "tripwise-4a4ba",
-  storageBucket:     "tripwise-4a4ba.firebasestorage.app",
-  messagingSenderId: "1082201515676",
-  appId:             "1:1082201515676:web:533f783bfaef342ec8af59",
-  measurementId:     "G-49GQWXZB05"
+  apiKey: "AIzaSyAM9t-EmuJgh1dZf2t-LK5OGYqIJJmCyWs",
+  authDomain: "tripwisev2.firebaseapp.com",
+  projectId: "tripwisev2",
+  storageBucket: "tripwisev2.firebasestorage.app",
+  messagingSenderId: "467828227733",
+  appId: "1:467828227733:web:344a63e75b60a3cc5d259c",
+  measurementId: "G-B639SDS8PH"
 };
 
 // ── Supply presets ───────────────────────────────────────────────
