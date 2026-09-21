@@ -364,14 +364,26 @@ function switchAuthTab(tab) {
 
 // ── Sign up ──────────────────────────────────────────────────────
 async function signUp() {
-  const name     = document.getElementById('signup-name').value.trim();
-  const email    = document.getElementById('signup-email').value.trim();
-  const password = document.getElementById('signup-password').value;
-  const errEl    = document.getElementById('err-signup');
+  const name            = document.getElementById('signup-name').value.trim();
+  const email           = document.getElementById('signup-email').value.trim();
+  const password        = document.getElementById('signup-password').value;
+  const confirmPassword = document.getElementById('signup-confirm-password').value;
+  const errEl           = document.getElementById('err-signup');
   errEl.classList.remove('show');
 
-  if (!name || !email || !password) {
+  if (!name || !email || !password || !confirmPassword) {
     errEl.textContent = 'Please fill in all fields.';
+    errEl.classList.add('show');
+    return;
+  }
+  if (password !== confirmPassword) {
+    errEl.textContent = 'Passwords do not match.';
+    errEl.classList.add('show');
+    document.getElementById('signup-confirm-password').focus();
+    return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
     errEl.classList.add('show');
     return;
   }
